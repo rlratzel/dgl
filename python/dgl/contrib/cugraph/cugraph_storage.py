@@ -20,7 +20,7 @@ import cupy
 import torch
 
 
-class GraphStorage(object):
+class CuGraphStorage(object):
     """
     Duck-typed version of the DGL GraphStorage class made for cuGraph
     """
