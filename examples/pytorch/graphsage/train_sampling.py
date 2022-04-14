@@ -13,7 +13,7 @@ import cugraph
 
 from model import SAGE
 from load_graph import load_reddit, inductive_split, load_ogb
-
+import dgl.dataloading.graphstorage as graphstorage
 
 
 def compute_acc(pred, labels):
