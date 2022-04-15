@@ -12,18 +12,17 @@
 # limitations under the License.
 
 import pytest
-import dgl
-import cupy
-import torch
 
-from cugraph_test_utils import cugraph_loaded
-
-if cugraph_loaded():
+try:
     import cugraph
     from cugraph.experimental import PropertyGraph
-    from dgl.contrib.cugraph.cugraph_utils import toDGL
     import cudf
-    # from cudf.testing import assert_frame_equal, assert_series_equal
+    cugraph_avail = True
+except ModuleNotFoundError:
+    cugraph_avail = False
+
+from dgl.contrib.cugraph.cugraph_utils import cugraphToDGL
+from dgl.contrib.cugraph.cugraph_storage import CuGraphStorage
 
 
 dataset1 = {
@@ -85,12 +84,12 @@ dataset1 = {
 }
 
 
-def dataset1_PropertyGraph(request):
+def create_pg():
     """
     Fixture which returns an instance of a PropertyGraph with vertex and edge
     data added from dataset1, parameterized for different DataFrame types.
     """
-    dataframe_type = request
+    dataframe_type = cudf.DataFrame
 
     (merchants, users, taxpayers,
      transactions, relationships, referrals) = dataset1.values()
@@ -144,38 +143,18 @@ def dataset1_PropertyGraph(request):
 
 
 @pytest.mark.skipif(
-    cugraph_loaded(), reason="skipping cugraph based testing "
+    not cugraph_avail, reason="skipping cugraph based testing "
 )
 def test_cugraph_pg_to_dgl():
-    pG = dataset1_PropertyGraph(cudf.DataFrame)
-    print("edges prop")
-    print(pG._edge_prop_dataframe)
-    print("node prop")
-    print(pG._vertex_prop_dataframe)
-    ndata = pG._vertex_prop_dataframe
-    print(ndata['_TYPE_'] == 'merchants')
-    print(ndata[ndata['_TYPE_'] == 'merchants'])
-    print(ndata[ndata['_TYPE_'] == 'merchants']['merchant_id'])
+    # Test 1 - loading a Property Graph
+    pG = create_pg()
+    assert pG.num_vertices == 9
+    assert pG.num_edges == 14
 
-    edata = pG._edge_prop_dataframe
-    selected_edges = edata[edata['_TYPE_'] == 'transactions'].iloc[[1, 2]]
-    print(selected_edges['_SRC_'])
+    # Test 2 - Creating a CuGraphStorage object
+    cgs = CuGraphStorage(pG)
+    assert len(cgs.edata) == 14
+    assert len(cgs.ndata) == 16
+    assert cgs.num_nodes("merchants") == 5
 
-    print(ndata[ndata['_TYPE_'] == 'merchants'].shape[0])
-
-    g = cugraph.Graph()
-    df = cudf.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    g.from_cudf_edgelist(df, source="a", destination="b")
-    print(g.nodes())
-    print(g.edges())
-    edgelist = g.edges()
-    print(edgelist)
-    # g_dgl = dgl.DGLGraph(edgelist)
-    print("dst", edgelist['dst'])
-    src = cupy.asarray(edgelist['src'])
-    dst = cupy.asarray(edgelist['dst'])
-    print(dst)
-    g_dgl = dgl.graph((src, dst))
-    print(g_dgl)
-    src = cupy.asarray(edata['_SRC_'])
-    src_tensor = torch.as_tensor(src, device='cuda')
+    # Test 3 - Sampling
