@@ -17,7 +17,7 @@ from cugraph.experimental import PropertyGraph
 
 
 # from cugraph to DGL using 
-def toDGL(graph):
+def cugraphToDGL(graph):
     """
     Convert fromn a cuGraph graph to a DGLGraph
     Parameters

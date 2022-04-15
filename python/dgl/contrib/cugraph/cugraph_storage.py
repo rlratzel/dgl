@@ -14,7 +14,7 @@
 
 import cugraph
 from cugraph.experimental import PropertyGraph
-from cugraph_utils import toDGL
+from .cugraph_utils import cugraphToDGL
 import dgl
 import cupy
 import torch
@@ -153,7 +153,7 @@ class CuGraphStorage(object):
         """
         sampled_cugraph = self.graphstore.node_subgraph(nodes)
         # the return type is cugraph subgraph
-        sample_graph = toDGL(sampled_cugraph)
+        sample_graph = cugraphToDGL(sampled_cugraph)
         sample_graph.to_device(output_device)
         return sample_graph
 
