@@ -31,8 +31,8 @@ class CuGraphStorage(object):
                 f"g must be a PropertyGraphh, got {type(g)}")
 
         self.graphstore = cugraph.gnn.CuGraphStore(graph=g)
-        self._edata = g.edata
-        self._ndata = g.ndata
+        self._edata = self.graphstore.edata
+        self._ndata = self.graphstore.ndata
 
     @property
     def ndata(self):
