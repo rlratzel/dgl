@@ -14,7 +14,7 @@ import cugraph
 from model import SAGE
 from load_graph import load_reddit, inductive_split, load_ogb
 import dgl.dataloading.graphstorage as graphstorage
-
+from read_cugraph import read_cugraph 
 
 def compute_acc(pred, labels):
     """
@@ -69,12 +69,6 @@ def run(args, device, data):
     val_nid = th.nonzero(val_g.ndata['val_mask'], as_tuple=True)[0]
     test_nid = th.nonzero(~(test_g.ndata['train_mask'] | test_g.ndata['val_mask']), as_tuple=True)[0]
     
-    print ("train_g", train_g)
-    print ("val_g", val_g)
-    # train_g 
-    train_cugraph = toCugraph(train_g)
-    val_cugraph = toCugraph(val_g)
-    test_cugraph = toCugraph(test_g)
 
     # need to change to gpu 
     dataloader_device = th.device('cpu')
@@ -181,25 +175,19 @@ if __name__ == '__main__':
     else:
         device = th.device('cpu')
 
-    if args.dataset == 'reddit':
-        g, n_classes = load_reddit()
-    elif args.dataset == 'ogbn-products':
-        g, n_classes = load_ogb('ogbn-products')
+    if args.dataset == 'cora':
+        graph_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.cites'
+        feat_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.content'
+        gstore, labels = read_cugraph(graph_path, feat_path)
+        n_classes = 7
+
+        # we only consider transductive cases for now
+        train_g = val_g = test_g = gstore
+        train_nfeat = val_nfeat = test_nfeat = 1433
+        train_labels = val_labels = test_labels = labels
+    
     else:
         raise Exception('unknown dataset')
-
-    if args.inductive:
-        train_g, val_g, test_g = inductive_split(g)
-        train_nfeat = train_g.ndata.pop('features')
-        val_nfeat = val_g.ndata.pop('features')
-        test_nfeat = test_g.ndata.pop('features')
-        train_labels = train_g.ndata.pop('labels')
-        val_labels = val_g.ndata.pop('labels')
-        test_labels = test_g.ndata.pop('labels')
-    else:
-        train_g = val_g = test_g = g
-        train_nfeat = val_nfeat = test_nfeat = g.ndata.pop('features')
-        train_labels = val_labels = test_labels = g.ndata.pop('labels')
 
     if not args.data_cpu:
         train_nfeat = train_nfeat.to(device)
