@@ -46,17 +46,6 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
     batch_labels = labels[seeds].to(device)
     return batch_inputs, batch_labels
 
-def toCugraph(dgl_g):
-    # return type is tensor
-    edgelist = dgl_g.edges()
-    src = edgelist[0]
-    dst = edgelist[1]
-    src_array = cupy.asarray(src)
-    dst_array = cupy.asarray(dst)
-    cudf_data = cudf.DataFrame((src_array,dst_array))
-    g = cugraph.Graph()
-    g.from_cudf_edgelist(cudf_data)
-    return g
 
 #### Entry point
 def run(args, device, data):
