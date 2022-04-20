@@ -15,6 +15,15 @@ import cugraph
 import dgl
 
 
+def to_cugraph(g : dgl.DGLGraph)
+    # -> cuGraph.Graph: 
+    # convert a DGLGraph to cuGraph.Graph
+
+def to_dglgraph(g : cuGraph.Graph)
+    #  -> dgl.DGLGraph:
+    # convert a cuGraph.Graph to DGLGraph
+
+
 # from cugraph to DGL using 
 def cugraphToDGL(graph):
     """

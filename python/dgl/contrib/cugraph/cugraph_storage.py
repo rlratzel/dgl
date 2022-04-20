@@ -21,7 +21,7 @@ import cupy
 import torch
 
 
-class CuGraphStorage(object):
+class CuGraphStorage():
     """
     Duck-typed version of the DGL GraphStorage class made for cuGraph
     """
@@ -44,14 +44,12 @@ class CuGraphStorage(object):
         return self._edata
 
     def get_node_storage(self, key, ntype=None):
-        node_col = self._ndata[self._ndata['_TYPE_'] == ntype][key]
-        cupy_nodes = cupy.asarray(node_col)
-        return torch.as_tensor(cupy_nodes)
+        node_col = self.graphstore.get_node_storage(key, ntype)
+        return torch.as_tensor(cupy.asarray(node_col))
 
     def get_edge_storage(self, key, etype=None):
-        edge_col = self._edata[self._edata['_TYPE_'] == etype][key]
-        cupy_edges = cupy.asarray(edge_col)
-        return torch.as_tensor(cupy_edges)
+        edge_col = self.graphstore.get_edge_storage(key, etype)
+        return torch.as_tensor(cupy.asarray(edge_col))
 
     # Required for checking whether single dict is allowed for ndata and edata
     @property
@@ -114,7 +112,7 @@ class CuGraphStorage(object):
             only the sampled neighboring edges.  The induced edge IDs will be
             in ``edata[dgl.EID]``.
         """
-        # return type is cupy array
+        # return type cuGraph types
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
