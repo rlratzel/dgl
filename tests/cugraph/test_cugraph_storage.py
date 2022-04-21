@@ -158,3 +158,6 @@ def test_cugraph_pg_to_dgl():
     assert cgs.num_nodes("merchants") == 5
 
     # Test 3 - Sampling
+    nodes = cudf.Series([4])
+    x = cgs.sample_neighbors(seed_nodes=nodes, fanout=1)
+    assert x is not None
