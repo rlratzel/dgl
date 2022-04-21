@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 # NOTE: Requires cuGraph nightly cugraph-22.06.00a220417 or later
 
 import cugraph
@@ -19,6 +20,7 @@ from .cugraph_utils import cugraphToDGL
 import dgl
 import cupy
 import torch
+
 
 
 class CuGraphStorage():
@@ -50,6 +52,7 @@ class CuGraphStorage():
     def get_edge_storage(self, key, etype=None):
         edge_col = self.graphstore.get_edge_storage(key, etype)
         return torch.as_tensor(cupy.asarray(edge_col))
+
 
     # Required for checking whether single dict is allowed for ndata and edata
     @property
@@ -112,7 +115,6 @@ class CuGraphStorage():
             only the sampled neighboring edges.  The induced edge IDs will be
             in ``edata[dgl.EID]``.
         """
-        # return type cuGraph types
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
@@ -123,6 +125,7 @@ class CuGraphStorage():
         # to device function move the dgl graph to desired devices
         if output_device is not None:
             sampled_graph.to_device(output_device)
+
         return sampled_graph
 
     # Required in Cluster-GCN

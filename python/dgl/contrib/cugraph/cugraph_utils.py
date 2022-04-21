@@ -13,15 +13,8 @@
 
 import cugraph
 import dgl
+from cugraph.experimental import PropertyGraph
 
-
-def to_cugraph(g : dgl.DGLGraph)
-    # -> cuGraph.Graph: 
-    # convert a DGLGraph to cuGraph.Graph
-
-def to_dglgraph(g : cuGraph.Graph)
-    #  -> dgl.DGLGraph:
-    # convert a cuGraph.Graph to DGLGraph
 
 
 # from cugraph to DGL using 
@@ -42,3 +35,27 @@ def cugraphToDGL(graph):
     dst = cupy.asarray(edgelist['dst'])
     g_dgl = dgl.graph((src, dst))
     return g_dgl
+
+
+def dglToCugraph(graph):
+        """
+    Convert fromn a DGLGraph graph to a cuGraph
+    Parameters
+    ----------
+    graph : dgl.Graph
+        A DGLGraph Graph object in GPU memory
+
+    Returns
+    -------
+    g_cugraph : cuGraph
+    """
+    edgelist = graph.edges()
+    src = edgelist[0]
+    dst = edgelist[1]
+    src_array = cupy.asarray(src)
+    dst_array = cupy.asarray(dst)
+    cudf_data = cudf.DataFrame((src_array,dst_array))
+    g_cugraph = cugraph.Graph()
+    g_cugraph.from_cudf_edgelist(cudf_data)
+    return g_cugraph
+
