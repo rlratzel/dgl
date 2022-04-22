@@ -13,6 +13,16 @@ import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
 import dgl.contrib.cugraph.graph_storage as graphstorage
+import numpy as np
+import random
+import sklearn
+
+
+def sample_mask(idx, l):
+    """Create mask."""
+    mask = np.zeros(l)
+    mask[idx] = 1
+    return np.array(mask, dtype=np.bool)
 
 
 def read_cugraph(graph_path, feat_path, self_loop=False):
@@ -36,7 +46,17 @@ def read_cugraph(graph_path, feat_path, self_loop=False):
 
     gstore = dgl.contrib.cugraph.CuGraphStorage(pg)
 
-    return gstore, labels
+    # define train, test and val splits
+    indices = np.arange(len(labels))
+    random.shuffle(indices)
+    idx_train, idx_val, idx_test = np.split(indices, [1000, 1500])
+    
+    train_mask = sample_mask(idx_train, labels.shape[0])
+    val_mask = sample_mask(idx_val, labels.shape[0])
+    test_mask = sample_mask(idx_test, labels.shape[0])
+    
+
+    return gstore, labels, train_mask, val_mask, test_mask
 
 
 

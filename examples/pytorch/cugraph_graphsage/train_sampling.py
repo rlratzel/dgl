@@ -54,13 +54,10 @@ def run(args, device, data):
     n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
     val_nfeat, val_labels, test_nfeat, test_labels = data
     in_feats = train_nfeat.shape[1]
-    train_nid = th.nonzero(train_g.ndata['train_mask'], as_tuple=True)[0]
-    val_nid = th.nonzero(val_g.ndata['val_mask'], as_tuple=True)[0]
-    test_nid = th.nonzero(~(test_g.ndata['train_mask'] | test_g.ndata['val_mask']), as_tuple=True)[0]
-    
-
-
-    train_nid = train_nid.to(device)
+    #train_nid = th.nonzero(train_g.ndata['train_mask'], as_tuple=True)[0]
+    #val_nid = th.nonzero(val_g.ndata['val_mask'], as_tuple=True)[0]
+    #test_nid = th.nonzero(~(test_g.ndata['train_mask'] | test_g.ndata['val_mask']), as_tuple=True)[0]
+ 
     dataloader_device = device
 
     # Create PyTorch DataLoader for constructing blocks
@@ -167,15 +164,12 @@ if __name__ == '__main__':
 
         # we only consider transductive cases for now
         train_g = val_g = test_g = gstore
-        train_nfeat = val_nfeat = test_nfeat = 1433
+        train_nfeat = val_nfeat = test_nfeat = gstore.ndata
         train_labels = val_labels = test_labels = labels
     
     else:
         raise Exception('unknown dataset')
 
-    if not args.data_cpu:
-        train_nfeat = train_nfeat.to(device)
-        train_labels = train_labels.to(device)
 
     # Pack data
     data = n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
