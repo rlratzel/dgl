@@ -59,14 +59,9 @@ def run(args, device, data):
     test_nid = th.nonzero(~(test_g.ndata['train_mask'] | test_g.ndata['val_mask']), as_tuple=True)[0]
     
 
-    # need to change to gpu 
-    dataloader_device = th.device('cpu')
-    if args.sample_gpu:
-        train_nid = train_nid.to(device)
-        # copy only the csc to the GPU
-        train_g = train_g.formats(['csc'])
-        train_g = train_g.to(device)
-        dataloader_device = device
+
+    train_nid = train_nid.to(device)
+    dataloader_device = device
 
     # Create PyTorch DataLoader for constructing blocks
     sampler = dgl.dataloading.MultiLayerNeighborSampler(
