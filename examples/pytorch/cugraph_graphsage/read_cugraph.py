@@ -51,12 +51,12 @@ def read_cugraph(graph_path, feat_path, self_loop=False):
     random.shuffle(indices)
     idx_train, idx_val, idx_test = np.split(indices, [1000, 1500])
     
-    train_mask = sample_mask(idx_train, labels.shape[0])
-    val_mask = sample_mask(idx_val, labels.shape[0])
-    test_mask = sample_mask(idx_test, labels.shape[0])
+    #train_mask = sample_mask(idx_train, labels.shape[0])
+    #val_mask = sample_mask(idx_val, labels.shape[0])
+    #test_mask = sample_mask(idx_test, labels.shape[0])
     
 
-    return gstore, labels, train_mask, val_mask, test_mask
+    return gstore, labels, idx_train, idx_val, idx_test
 
 
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     graph_path = './datasets/cora/cora.cites'
     feat_path = './datasets/cora/cora.content'
     gstore, labels = read_cugraph(graph_path, feat_path)
-    print (gstore)
-    print (labels)
+    #print (gstore)
+    #print (labels)
 
 

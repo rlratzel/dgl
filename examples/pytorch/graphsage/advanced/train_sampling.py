@@ -84,6 +84,7 @@ def run(args, device, data):
     print("train_g", train_g)
     print("ndata", train_g.ndata)
     print("train_nfeat", train_nfeat)
+    print("train_id",train_nid)
 
     # Training loop
     avg = 0

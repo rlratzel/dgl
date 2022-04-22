@@ -52,13 +52,15 @@ def run(args, device, data):
     # Unpack data
     # the reading data part need to be changed
     n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
-    val_nfeat, val_labels, test_nfeat, test_labels = data
+    val_nfeat, val_labels, test_nfeat, test_labels, idx_train, \
+    idx_val, idx_test = data
     in_feats = train_nfeat.shape[1]
-    #train_nid = th.nonzero(train_g.ndata['train_mask'], as_tuple=True)[0]
-    #val_nid = th.nonzero(val_g.ndata['val_mask'], as_tuple=True)[0]
-    #test_nid = th.nonzero(~(test_g.ndata['train_mask'] | test_g.ndata['val_mask']), as_tuple=True)[0]
- 
     dataloader_device = device
+
+    train_nid = th.tensor(idx_train, device=dataloader_device)
+    test_nid = th.tensor(idx_test, device=dataloader_device)
+    val_nid = th.tensor(idx_val, device=dataloader_device)
+
 
     # Create PyTorch DataLoader for constructing blocks
     sampler = dgl.dataloading.MultiLayerNeighborSampler(
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     if args.dataset == 'cora':
         graph_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.cites'
         feat_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.content'
-        gstore, labels = read_cugraph(graph_path, feat_path)
+        gstore, labels, idx_train, idx_val, idx_test = read_cugraph(graph_path, feat_path)
         n_classes = 7
 
         # we only consider transductive cases for now
@@ -173,6 +175,7 @@ if __name__ == '__main__':
 
     # Pack data
     data = n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
-           val_nfeat, val_labels, test_nfeat, test_labels
+           val_nfeat, val_labels, test_nfeat, test_labels, idx_train, \
+           idx_val, idx_test
 
     run(args, device, data)
