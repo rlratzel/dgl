@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # NOTE: Requires cuGraph nightly cugraph-22.06.00a220417 or later
 
 import cugraph
@@ -20,7 +19,6 @@ from .cugraph_utils import cugraphToDGL
 import dgl
 import cupy
 import torch
-
 
 
 class CuGraphStorage():
@@ -53,20 +51,19 @@ class CuGraphStorage():
         edge_col = self.graphstore.get_edge_storage(key, etype)
         return torch.as_tensor(cupy.asarray(edge_col))
 
-
     # Required for checking whether single dict is allowed for ndata and edata
     @property
     def ntypes(self):
-        data_ntypes = self._ndata['_TYPE_']
+        data_ntypes = self._ndata[PropertyGraph.type_col_name]
         # TODO: double check the return type
         return data_ntypes
 
     @property
     def canonical_etypes(self):
-        pass
+        raise NotImplementedError("canonical not implemented")
 
     def etypes(self):
-        data_etypes = self._edata['_TYPE_']
+        data_etypes = self._edata[PropertyGraph.type_col_name]
         return data_etypes
 
     def sample_neighbors(self, seed_nodes, fanout, edge_dir='in', prob=None,
@@ -218,4 +215,4 @@ class CuGraphStorage():
         """
         Per source negative sampling as in ``dgl.dataloading.GlobalUniform``
         """
-        pass
+        raise NotImplementedError("canonical not implemented")

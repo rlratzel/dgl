@@ -12,18 +12,18 @@
 # limitations under the License.
 
 import cugraph
+import cudf
 import dgl
-from cugraph.experimental import PropertyGraph
+import cupy
 
 
-
-# from cugraph to DGL using 
+# from cugraph to DGL using
 def cugraphToDGL(graph):
     """
     Convert fromn a cuGraph graph to a DGLGraph
     Parameters
     ----------
-    graph : cugraph.Graph
+    graph : cugraph graph type {Graph, PropertyGraph}
         A cuGraph Graph object in GPU memory
 
     Returns
@@ -38,7 +38,7 @@ def cugraphToDGL(graph):
 
 
 def dglToCugraph(graph):
-        """
+    """
     Convert fromn a DGLGraph graph to a cuGraph
     Parameters
     ----------
@@ -54,8 +54,7 @@ def dglToCugraph(graph):
     dst = edgelist[1]
     src_array = cupy.asarray(src)
     dst_array = cupy.asarray(dst)
-    cudf_data = cudf.DataFrame((src_array,dst_array))
+    cudf_data = cudf.DataFrame((src_array, dst_array))
     g_cugraph = cugraph.Graph()
     g_cugraph.from_cudf_edgelist(cudf_data)
     return g_cugraph
-
