@@ -12,7 +12,7 @@
 import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
-import dgl.contrib.cugraph.graph_storage as graphstorage
+from dgl.contrib.cugraph.graph_storage import CuGraphStorage
 import numpy as np
 import random
 import sklearn

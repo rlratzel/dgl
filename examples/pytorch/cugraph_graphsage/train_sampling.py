@@ -68,7 +68,7 @@ def run(args, device, data):
 
     # their new dataloader will automatically call our graphsage.
     # no need to change this part
-    dataloader = dgl.dataloading.NodeDataLoader(
+    dataloader = dgl.dataloading.DataLoader(
         train_g,
         train_nid,
         sampler,
