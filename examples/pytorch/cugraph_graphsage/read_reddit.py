@@ -12,47 +12,40 @@
 import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
-import dgl.contrib.cugraph.graph_storage as graphstorage
+#import dgl.contrib.cugraph.graph_storage as graphstorage
 import numpy as np
 import random
 import sklearn
+import pandas as pd
 
+def read_reddit(graph_path, feat_path, self_loop=False):
+    #url = 'https://data.dgl.ai/dataset/reddit.zip'
+    #raw_path = "/home/xiaoyunw/Downloads/reddit"
+    coo_adj = sp.load_npz(os.path.join(raw_path, "reddit_graph.npz"))
+    csr_adj = coo_adj.tocsr()
+    offsets = pd.Series(csr_adj.indptr)
+    indices = pd.Series(csr_adj.indices)
+    graph = cugraph.from_adjlist(offsets, indices, None)
 
-def sample_mask(idx, l):
-    """Create mask."""
-    mask = np.zeros(l)
-    mask[idx] = 1
-    return np.array(mask, dtype=np.bool)
-
-
-def read_cugraph(graph_path, feat_path, self_loop=False):
-    cora_M = cudf.read_csv(graph_path, sep = '\t', header = None)
-    cora_content = cudf.read_csv(feat_path, sep = '\t', header = None)
-    # the last column is true label
-    cora_content1 = cora_content.drop (columns = '1434')
-    # add weight into graph
-    cora_M['weight'] = 1.0
-
+    # features and labels
+    reddit_data = np.load(os.path.join(raw_path, "reddit_data.npz"))
+    features = reddit_data["feature"]
+    labels = reddit_data["label"]
+    # tarin/val/test indices
+    node_types = reddit_data["node_types"]
+    train_mask = (node_types == 1)
+    val_mask = (node_types == 2)
+    test_mask = (node_types == 3)
     # add features to nodes and edges
     pg = PropertyGraph()
 
-    pg.add_edge_data(cora_M, vertex_col_names=("0","1"))
-    pg.add_vertex_data(cora_content1, vertex_col_name = "0")
+    pg.add_edge_data(graph, vertex_col_names=("0","1"))
 
-    pg._vertex_prop_dataframe.drop(columns = ['0'], inplace = True)
-    pg._edge_prop_dataframe.drop(columns = ['0', '1'], inplace = True)
-
-    labels = cora_content['1434']
+    pg.add_vertex_data(reddit_data, vertex_col_name = "0")
 
     gstore = dgl.contrib.cugraph.CuGraphStorage(pg)
 
-    # define train, test and val splits
-    indices = np.arange(len(labels))
-    random.shuffle(indices)
-    idx_train, idx_val, idx_test = np.split(indices, [1000, 1500])
-    
-
-    return gstore, labels, idx_train, idx_val, idx_test
+    return gstore, labels, train_mask, val_mask, test_mask
 
 
 
@@ -62,5 +55,4 @@ if __name__ == '__main__':
     gstore, labels = read_cugraph(graph_path, feat_path)
     #print (gstore)
     #print (labels)
-
 
