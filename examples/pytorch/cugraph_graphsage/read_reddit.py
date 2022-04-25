@@ -12,12 +12,14 @@
 import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
-from dgl.contrib.cugraph.graph_storage import CuGraphStorage
+from dgl.contrib.cugraph import CuGraphStorage
 import numpy as np
 import random
 import sklearn
 import pandas as pd
-import scipy as sp
+import scipy.sparse as sp
+import os
+
 
 def read_reddit(raw_path, self_loop=False):
     #url = 'https://data.dgl.ai/dataset/reddit.zip'
@@ -27,10 +29,13 @@ def read_reddit(raw_path, self_loop=False):
     offsets = pd.Series(csr_adj.indptr)
     indices = pd.Series(csr_adj.indices)
     graph = cugraph.from_adjlist(offsets, indices, None)
+    edgelist = graph.edges()
 
     # features and labels
     reddit_data = np.load(os.path.join(raw_path, "reddit_data.npz"))
     features = reddit_data["feature"]
+    cu_features = cudf.DataFrame(features)
+    cu_features['name'] = np.arange(cu_features.shape[0])
     labels = reddit_data["label"]
     # tarin/val/test indices
     node_types = reddit_data["node_types"]
@@ -40,16 +45,18 @@ def read_reddit(raw_path, self_loop=False):
     # add features to nodes and edges
     pg = PropertyGraph()
 
-    pg.add_edge_data(graph, vertex_col_names=("0","1"))
+    pg.add_edge_data(edgelist, vertex_col_names=("src","dst"))
 
-    pg.add_vertex_data(reddit_data, vertex_col_name = "0")
+    pg.add_vertex_data(cu_features, vertex_col_name = "name")
+    pg._vertex_prop_dataframe.drop(columns = ['name'], inplace = True)
 
-    gstore = dgl.contrib.cugraph.CuGraphStorage(pg)
+    gstore = CuGraphStorage(pg)
 
     return gstore, labels, train_mask, val_mask, test_mask
 
 
 
-#if __name__ == '__main__':
-    
+if __name__ == '__main__':
+    raw_path = "/home/xiaoyunw/Downloads/reddit"
+    gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path)    
 
