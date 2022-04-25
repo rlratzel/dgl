@@ -17,6 +17,7 @@ import numpy as np
 import random
 import sklearn
 import pandas as pd
+import scipy as sp
 
 def read_reddit(raw_path, self_loop=False):
     #url = 'https://data.dgl.ai/dataset/reddit.zip'
