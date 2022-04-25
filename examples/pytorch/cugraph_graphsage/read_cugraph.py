@@ -56,10 +56,10 @@ def read_cugraph(graph_path, feat_path, self_loop=False):
 
 
 
-if __name__ == '__main__':
-    graph_path = './datasets/cora/cora.cites'
-    feat_path = './datasets/cora/cora.content'
-    gstore, labels = read_cugraph(graph_path, feat_path)
+#if __name__ == '__main__':
+#    graph_path = './datasets/cora/cora.cites'
+#    feat_path = './datasets/cora/cora.content'
+#    gstore, labels = read_cugraph(graph_path, feat_path)
     #print (gstore)
     #print (labels)
 

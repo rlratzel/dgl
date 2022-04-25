@@ -12,13 +12,13 @@
 import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
-#import dgl.contrib.cugraph.graph_storage as graphstorage
+import dgl.contrib.cugraph.graph_storage as graphstorage
 import numpy as np
 import random
 import sklearn
 import pandas as pd
 
-def read_reddit(graph_path, feat_path, self_loop=False):
+def read_reddit(raw_path, self_loop=False):
     #url = 'https://data.dgl.ai/dataset/reddit.zip'
     #raw_path = "/home/xiaoyunw/Downloads/reddit"
     coo_adj = sp.load_npz(os.path.join(raw_path, "reddit_graph.npz"))
@@ -49,10 +49,6 @@ def read_reddit(graph_path, feat_path, self_loop=False):
 
 
 
-if __name__ == '__main__':
-    graph_path = './datasets/cora/cora.cites'
-    feat_path = './datasets/cora/cora.content'
-    gstore, labels = read_cugraph(graph_path, feat_path)
-    #print (gstore)
-    #print (labels)
+#if __name__ == '__main__':
+    
 
