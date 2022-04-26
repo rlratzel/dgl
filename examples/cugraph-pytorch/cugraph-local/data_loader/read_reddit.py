@@ -1,12 +1,12 @@
-# Copyright (c) 2019-2022, NVIDIA CORPORATION.   
-# Licensed under the Apache License, Version 2.0 (the "License");   
-# you may not use this file except in compliance with the License.   
-# You may obtain a copy of the License at   #   
-# http://www.apache.org/licenses/LICENSE-2.0   #   
-# Unless required by applicable law or agreed to in writing, software   
-# distributed under the License is distributed on an "AS IS" BASIS,   
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   
-# See the License for the specific language governing permissions and   
+# Copyright (c) 2019-2022, NVIDIA CORPORATION.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at   #
+# http://www.apache.org/licenses/LICENSE-2.0   #
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 # limitations under the License.
 
 import cugraph
@@ -14,16 +14,14 @@ import cudf
 from cugraph.experimental import PropertyGraph
 from dgl.contrib.cugraph import CuGraphStorage
 import numpy as np
-import random
-import sklearn
 import pandas as pd
 import scipy.sparse as sp
 import os
 
 
 def read_reddit(raw_path, self_loop=False):
-    #url = 'https://data.dgl.ai/dataset/reddit.zip'
-    #raw_path = "/home/xiaoyunw/Downloads/reddit"
+    # url = 'https://data.dgl.ai/dataset/reddit.zip'
+    # raw_path = "/home/xiaoyunw/Downloads/reddit"
     coo_adj = sp.load_npz(os.path.join(raw_path, "reddit_graph.npz"))
     csr_adj = coo_adj.tocsr()
     offsets = pd.Series(csr_adj.indptr)
@@ -45,18 +43,16 @@ def read_reddit(raw_path, self_loop=False):
     # add features to nodes and edges
     pg = PropertyGraph()
 
-    pg.add_edge_data(edgelist, vertex_col_names=("src","dst"))
+    pg.add_edge_data(edgelist, vertex_col_names=("src", "dst"))
 
-    pg.add_vertex_data(cu_features, vertex_col_name = "name")
-    pg._vertex_prop_dataframe.drop(columns = ['name'], inplace = True)
+    pg.add_vertex_data(cu_features, vertex_col_name="name")
+    pg._vertex_prop_dataframe.drop(columns=['name'], inplace=True)
 
     gstore = CuGraphStorage(pg)
 
     return gstore, labels, train_mask, val_mask, test_mask
 
 
-
 if __name__ == '__main__':
     raw_path = "/home/xiaoyunw/Downloads/reddit"
-    gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path)    
-
+    gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path)
