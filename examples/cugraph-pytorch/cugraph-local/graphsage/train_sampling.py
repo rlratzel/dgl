@@ -1,3 +1,4 @@
+import cugraph
 import dgl
 import numpy as np
 import torch as th
@@ -9,12 +10,14 @@ import time
 import argparse
 import tqdm
 import cupy
-import cugraph
 
 from model import SAGE
-from load_graph import load_reddit, inductive_split, load_ogb
-import dgl.dataloading.graphstorage as graphstorage
-from read_cugraph import read_cugraph 
+
+import sys 
+sys.path.append('../data_loader')
+from read_cora import read_cora
+from read_reddit import read_reddit
+
 
 def compute_acc(pred, labels):
     """
@@ -159,16 +162,25 @@ if __name__ == '__main__':
         device = th.device('cpu')
 
     if args.dataset == 'cora':
-        graph_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.cites'
-        feat_path = '/home/xiaoyunw/cugraph/datasets/cora/cora.content'
-        gstore, labels, idx_train, idx_val, idx_test = read_cugraph(graph_path, feat_path)
+        graph_path = '../datasets/cora/cora.cites'
+        feat_path = '../datasets/cora/cora.content'
+        gstore, labels, idx_train, idx_val, idx_test = read_cora(graph_path, feat_path)
         n_classes = 7
 
         # we only consider transductive cases for now
         train_g = val_g = test_g = gstore
         train_nfeat = val_nfeat = test_nfeat = gstore.ndata
         train_labels = val_labels = test_labels = labels
-    
+
+    elif args.dataset == 'reddit':
+        raw_path = "/home/xiaoyunw/Downloads/reddit"
+        gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path) 
+        n_classes = 41
+        train_g = val_g = test_g = gstore
+        train_nfeat = val_nfeat = test_nfeat = gstore.ndata
+        train_labels = val_labels = test_labels = labels
+        # need to add more code from changing mask to id
+
     else:
         raise Exception('unknown dataset')
 

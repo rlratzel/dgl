@@ -28,7 +28,7 @@ def sample_mask(idx, l):
     return np.array(mask, dtype=np.bool)
 
 
-def read_cugraph(graph_path, feat_path, self_loop=False):
+def read_cora(graph_path, feat_path, self_loop=False):
     cora_M = cudf.read_csv(graph_path, sep = '\t', header = None)
     cora_content = cudf.read_csv(feat_path, sep = '\t', header = None)
     # the last column is true label
