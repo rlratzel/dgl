@@ -30,7 +30,8 @@ def read_cora(graph_path, feat_path, self_loop=False):
     cora_M = cudf.read_csv(graph_path, sep='\t', header=None)
     cora_content = cudf.read_csv(feat_path, sep='\t', header=None)
     # the last column is true label
-    cora_content1 = cora_content.drop(columns='1434')
+    labels = cora_content['1434']
+    cora_content.drop(columns='1434', inplace=True)
     # add weight into graph
     cora_M['weight'] = 1.0
 
@@ -38,12 +39,10 @@ def read_cora(graph_path, feat_path, self_loop=False):
     pg = PropertyGraph()
 
     pg.add_edge_data(cora_M, vertex_col_names=("0", "1"))
-    pg.add_vertex_data(cora_content1, vertex_col_name="0")
+    pg.add_vertex_data(cora_content, vertex_col_name="0")
 
     pg._vertex_prop_dataframe.drop(columns=['0'], inplace=True)
     pg._edge_prop_dataframe.drop(columns=['0', '1'], inplace=True)
-
-    labels = cora_content['1434']
 
     gstore = CuGraphStorage(pg)
 
