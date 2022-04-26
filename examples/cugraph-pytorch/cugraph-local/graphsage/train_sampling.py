@@ -8,10 +8,10 @@ import torch.optim as optim
 import time
 import argparse
 from model import SAGE
-from read_cora import read_cora
-from read_reddit import read_reddit
 import sys
 sys.path.append('../data_loader')
+from read_cora import read_cora
+from read_reddit import read_reddit
 
 
 def compute_acc(pred, labels):
