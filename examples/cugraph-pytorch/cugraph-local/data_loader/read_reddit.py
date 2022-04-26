@@ -9,25 +9,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
 from dgl.contrib.cugraph import CuGraphStorage
 import numpy as np
-import pandas as pd
 import scipy.sparse as sp
 import os
 
 
 def read_reddit(raw_path, self_loop=False):
-    # url = 'https://data.dgl.ai/dataset/reddit.zip'
-    # raw_path = "/home/xiaoyunw/Downloads/reddit"
     coo_adj = sp.load_npz(os.path.join(raw_path, "reddit_graph.npz"))
-    csr_adj = coo_adj.tocsr()
-    offsets = pd.Series(csr_adj.indptr)
-    indices = pd.Series(csr_adj.indices)
-    graph = cugraph.from_adjlist(offsets, indices, None)
-    edgelist = graph.edges()
+    edgelist = cudf.DataFrame()
+    edgelist['src'] = cudf.Series(coo_adj.row)
+    edgelist['dst'] = cudf.Series(coo_adj.col)
+    edgelist['wt'] = cudf.Series(coo_adj.data)
 
     # features and labels
     reddit_data = np.load(os.path.join(raw_path, "reddit_data.npz"))
@@ -51,8 +46,3 @@ def read_reddit(raw_path, self_loop=False):
     gstore = CuGraphStorage(pg)
 
     return gstore, labels, train_mask, val_mask, test_mask
-
-
-if __name__ == '__main__':
-    raw_path = "/home/xiaoyunw/Downloads/reddit"
-    gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path)
