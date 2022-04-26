@@ -11,39 +11,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import cugraph
 import cudf
 from cugraph.experimental import PropertyGraph
 from dgl.contrib.cugraph import CuGraphStorage
+import numpy as np
+import random
+import sklearn
 
 
-def read_cora(graph_path, feat_path, self_loop=False):
-    """
-    Read the cora dataset, create and load a Property Graph,
-    Then creat a CuGraphStorage object
-    """
+def sample_mask(idx, l):
+    """Create mask."""
+    mask = np.zeros(l)
+    mask[idx] = 1
+    return np.array(mask, dtype=np.bool)
+
+
+def read_cugraph(graph_path, feat_path, self_loop=False):
+    cora_M = cudf.read_csv(graph_path, sep = '\t', header = None)
+    cora_content = cudf.read_csv(feat_path, sep = '\t', header = None)
+    # the last column is true label
+    cora_content1 = cora_content.drop (columns = '1434')
+    # add weight into graph
+    cora_M['weight'] = 1.0
+
+    # add features to nodes and edges
     pg = PropertyGraph()
 
-    # load the edges and add a weight column
-    cora_M = cudf.read_csv(graph_path, sep='\t', header=None)
-    cora_M['weight'] = 1.0
-    pg.add_edge_data(cora_M, vertex_col_names=("0", "1"))
-    pg._edge_prop_dataframe.drop(columns=['0', '1'], inplace=True)
+    pg.add_edge_data(cora_M, vertex_col_names=("0","1"))
+    pg.add_vertex_data(cora_content1, vertex_col_name = "0")
 
-    # now load the wertex data, the last column (idx 1434) is the labels
-    cora_content = cudf.read_csv(feat_path, sep='\t', header=None)
+    pg._vertex_prop_dataframe.drop(columns = ['0'], inplace = True)
+    pg._edge_prop_dataframe.drop(columns = ['0', '1'], inplace = True)
+
     labels = cora_content['1434']
-    cora_content.drop(columns='1434', inplace=True)
-    pg.add_vertex_data(cora_content, vertex_col_name="0")
-    pg._vertex_prop_dataframe.drop(columns=['0'], inplace=True)
 
     gstore = CuGraphStorage(pg)
 
-    return gstore, labels
+    # define train, test and val splits
+    indices = np.arange(len(labels))
+    random.shuffle(indices)
+    idx_train, idx_val, idx_test = np.split(indices, [1000, 1500])
+    
+
+    return gstore, labels, idx_train, idx_val, idx_test
 
 
-if __name__ == '__main__':
-    graph_path = './datasets/cora/cora.cites'
-    feat_path = './datasets/cora/cora.content'
-    gstore, labels = read_cora(graph_path, feat_path)
-    print(gstore)
-    print(labels)
+
+#if __name__ == '__main__':
+#    graph_path = './datasets/cora/cora.cites'
+#    feat_path = './datasets/cora/cora.content'
+#    gstore, labels = read_cugraph(graph_path, feat_path)
+    #print (gstore)
+    #print (labels)
