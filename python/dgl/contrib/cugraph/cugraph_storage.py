@@ -112,6 +112,11 @@ class CuGraphStorage():
             only the sampled neighboring edges.  The induced edge IDs will be
             in ``edata[dgl.EID]``.
         """
+        # change the seed_nodes from pytorch tensor to cudf series
+        if torch.is_tensor(seed_nodes):
+            seed_nodes = cupy.asarray(seed_nodes)
+            seed_nodes = cudf.Series(seed_nodes)
+
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
