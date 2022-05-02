@@ -123,7 +123,9 @@ class CuGraphStorage():
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))
-
+        # add '_ID'
+        num_edges = len(all_children)
+        sampled_graph.edata['_ID'] = torch.tensor(np.arange (num_edges))
         # to device function move the dgl graph to desired devices
         if output_device is not None:
             sampled_graph.to_device(output_device)
