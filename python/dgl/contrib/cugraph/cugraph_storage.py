@@ -19,7 +19,8 @@ from .cugraph_utils import cugraphToDGL
 import dgl
 import cupy
 import torch
-
+import cudf
+import numpy as np
 
 class CuGraphStorage():
     """
@@ -124,7 +125,7 @@ class CuGraphStorage():
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))
         # add '_ID'
-        num_edges = len(all_children)
+        num_edges = len(children_nodes)
         sampled_graph.edata['_ID'] = torch.tensor(np.arange (num_edges))
         # to device function move the dgl graph to desired devices
         if output_device is not None:

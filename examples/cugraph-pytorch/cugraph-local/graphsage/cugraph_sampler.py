@@ -41,9 +41,12 @@ def cugraphSampler(g, nodes, fanouts, edge_dir='in', prob=None, replace=False,
     # from here get in a new for loop
     # ego_net return edge list
     num_nodes = len(nodes)
-    #current_seeds = nodes.reindex(index = np.arange(0, num_nodes))
-    current_seeds = cupy.asarray(nodes)
-    current_seeds = cudf.Series(current_seeds)
+    if torch.is_tensor(nodes):
+        current_seeds = cupy.asarray(nodes)
+        current_seeds = cudf.Series(current_seeds)
+    else:
+        current_seeds = nodes.reindex(index = np.arange(0, num_nodes))
+
     blocks = []
     #seeds = cudf.Series(nodes.to_array())
 
@@ -82,7 +85,10 @@ def cugraphSampler(g, nodes, fanouts, edge_dir='in', prob=None, replace=False,
         #print(all_children)
         #print(sampled_graph.edges())
         #print(seeds.to_array())
-        #eid = sampled_graph.edata[dgl.EID]
+        # '_ID' is EID
+        num_edges = len(all_children) 
+        sampled_graph.edata['_ID'] = torch.tensor(np.arange (num_edges))
+        print(sampled_graph.edata)
         #block =dgl.to_block(sampled_graph,current_seeds.to_array())
         #block.edata[dgl.EID] = eid
         #current_seeds = block.srcdata[dgl.NID]
@@ -103,7 +109,7 @@ if __name__ == '__main__':
         num_nodes = G_cu.number_of_nodes()
         #num_seeds_ = [1000, 3000, 5000, 10000]
         # just test 1 epoch
-        batch_size = 10
+        batch_size = 100
         num_batch = num_nodes/batch_size
         print (num_batch)
         # in each epoch shuffle the nodes
