@@ -19,7 +19,8 @@ from .cugraph_utils import cugraphToDGL
 import dgl
 import cupy
 import torch
-
+import cudf
+import numpy as np
 
 class CuGraphStorage():
     """
@@ -112,13 +113,20 @@ class CuGraphStorage():
             only the sampled neighboring edges.  The induced edge IDs will be
             in ``edata[dgl.EID]``.
         """
+        # change the seed_nodes from pytorch tensor to cudf series
+        if torch.is_tensor(seed_nodes):
+            seed_nodes = cupy.asarray(seed_nodes)
+            seed_nodes = cudf.Series(seed_nodes)
+
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))
-
+        # add '_ID'
+        num_edges = len(children_nodes)
+        sampled_graph.edata['_ID'] = torch.tensor(np.arange (num_edges))
         # to device function move the dgl graph to desired devices
         if output_device is not None:
             sampled_graph.to_device(output_device)

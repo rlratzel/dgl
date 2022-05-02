@@ -8,10 +8,10 @@ import torch.optim as optim
 import time
 import argparse
 from model import SAGE
-from read_cora import read_cora
-from read_reddit import read_reddit
 import sys
 sys.path.append('../data_loader')
+from read_cora import read_cora
+from read_reddit import read_reddit
 
 
 def compute_acc(pred, labels):
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         train_labels = val_labels = test_labels = labels
 
     elif args.dataset == 'reddit':
-        raw_path = "/home/xiaoyunw/Downloads/reddit"
+        raw_path = "../datasets/reddit"
         gstore, labels, train_mask, val_mask, test_mask = read_reddit(raw_path)
         n_classes = 41
         train_g = val_g = test_g = gstore
