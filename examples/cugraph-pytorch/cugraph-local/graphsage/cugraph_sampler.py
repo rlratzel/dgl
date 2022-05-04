@@ -40,6 +40,8 @@ def cugraphSampler(g, nodes, fanouts, edge_dir='in', prob=None, replace=False,
                      copy_ndata=True, copy_edata=True, _dist_training=False, exclude_edges=None):
     # from here get in a new for loop
     # ego_net return edge list
+    print("edge data")
+    print(g.edge_data)
     num_nodes = len(nodes)
     if torch.is_tensor(nodes):
         current_seeds = cupy.asarray(nodes)
@@ -109,7 +111,7 @@ if __name__ == '__main__':
         num_nodes = G_cu.number_of_nodes()
         #num_seeds_ = [1000, 3000, 5000, 10000]
         # just test 1 epoch
-        batch_size = 100
+        batch_size = 10
         num_batch = num_nodes/batch_size
         print (num_batch)
         # in each epoch shuffle the nodes
