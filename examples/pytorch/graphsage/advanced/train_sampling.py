@@ -42,9 +42,8 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
     Extracts features and labels for a subset of nodes
     """
     batch_inputs = nfeat[input_nodes].to(device)
+    print("data type of batch inputs", batch_inputs.dtype)
     batch_labels = labels[seeds].to(device)
-    print ("labels", labels)
-    print ("batch labels", batch_labels)
     return batch_inputs, batch_labels
 
 #### Entry point

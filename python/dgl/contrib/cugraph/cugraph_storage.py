@@ -41,7 +41,7 @@ class CuGraphStorage():
     def ndata(self):
         ndata_capsule = self._ndata.to_dlpack()
         nfeat = torch.from_dlpack(ndata_capsule)
-        return nfeat
+        return nfeat.to(torch.float32)
 
     @property
     def edata(self):

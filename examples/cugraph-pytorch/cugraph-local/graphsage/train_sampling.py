@@ -44,7 +44,7 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
     Extracts features and labels for a subset of nodes
     """
     batch_inputs = nfeat[input_nodes].to(device)
-    print (labels[seeds])
+    print (batch_inputs.dtype)
     batch_labels = labels[seeds.cpu()].to(device)
     return batch_inputs, batch_labels
 
@@ -188,7 +188,7 @@ if __name__ == '__main__':
         n_classes = 41
         train_g = val_g = test_g = gstore
         train_nfeat = val_nfeat = test_nfeat = gstore.ndata
-        train_labels = val_labels = test_labels = th.tensor(labels)
+        train_labels = val_labels = test_labels = th.tensor(labels, dtype=th.long)
         # need to add more code from changing mask to id
         idx_train = np.nonzero(train_mask)[0]
         idx_test = np.nonzero(test_mask)[0]
