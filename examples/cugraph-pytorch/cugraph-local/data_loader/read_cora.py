@@ -43,6 +43,8 @@ def read_cora(graph_path, feat_path, self_loop=False):
 
     pg._vertex_prop_dataframe.drop(columns=['0'], inplace=True)
     pg._edge_prop_dataframe.drop(columns=['0', '1'], inplace=True)
+    pg._vertex_prop_dataframe.drop(columns=['_TYPE_'], inplace=True)
+    pg._vertex_prop_dataframe.drop(columns=['_VERTEX_'], inplace=True)
 
     gstore = CuGraphStorage(pg)
 

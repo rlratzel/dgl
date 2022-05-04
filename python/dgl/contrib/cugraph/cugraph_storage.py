@@ -20,7 +20,7 @@ import dgl
 import cupy
 import torch
 import cudf
-import numpy as np
+
 
 class CuGraphStorage():
     """
@@ -124,15 +124,13 @@ class CuGraphStorage():
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
-        #print (self._edge_prop_df)
-        # _SRC_   _DST_  _EDGE_ID_
         num_edges = len(children_nodes)
         edge_ID_list = torch.zeros(num_edges)
-        for i in range (num_edges): 
-            mask1 = self._edge_prop_df['_SRC_'] == int(parents_nodes[i]) 
+        for i in range(num_edges):
+            mask1 = self._edge_prop_df['_SRC_'] == int(parents_nodes[i])
             mask2 = self._edge_prop_df['_DST_'] == int(children_nodes[i])
-            edge_ID_list[i] =torch.tensor(self._edge_prop_df[mask1&mask2]['_EDGE_ID_'].values_host)
-             
+            edge_ID_list[i] = torch.tensor(self._edge_prop_df[mask1 & mask2]
+                                           ['_EDGE_ID_'].values_host)
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))
