@@ -39,7 +39,9 @@ class CuGraphStorage():
 
     @property
     def ndata(self):
-        return self._ndata
+        ndata_capsule = self._ndata.to_dlpack()
+        nfeat = torch.from_dlpack(ndata_capsule)
+        return nfeat
 
     @property
     def edata(self):
@@ -130,9 +132,7 @@ class CuGraphStorage():
             mask1 = self._edge_prop_df['_SRC_'] == int(parents_nodes[i]) 
             mask2 = self._edge_prop_df['_DST_'] == int(children_nodes[i])
             edge_ID_list[i] =torch.tensor(self._edge_prop_df[mask1&mask2]['_EDGE_ID_'].values_host)
-            
-        #print(edge_ID_list)
-        
+             
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))

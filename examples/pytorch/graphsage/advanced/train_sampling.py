@@ -1,3 +1,4 @@
+import cugraph
 import dgl
 import numpy as np
 import torch as th
@@ -42,6 +43,8 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
     """
     batch_inputs = nfeat[input_nodes].to(device)
     batch_labels = labels[seeds].to(device)
+    print ("labels", labels)
+    print ("batch labels", batch_labels)
     return batch_inputs, batch_labels
 
 #### Entry point
