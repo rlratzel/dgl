@@ -20,7 +20,7 @@ import dgl
 import cupy
 import torch
 import cudf
-import numpy as np
+
 
 class CuGraphStorage():
     """
@@ -35,10 +35,13 @@ class CuGraphStorage():
         self.graphstore = cugraph.gnn.CuGraphStore(graph=g)
         self._edata = self.graphstore.edata
         self._ndata = self.graphstore.ndata
+        self._edge_prop_df = self.graphstore.gdata._edge_prop_dataframe
 
     @property
     def ndata(self):
-        return self._ndata
+        ndata_capsule = self._ndata.to_dlpack()
+        nfeat = torch.from_dlpack(ndata_capsule)
+        return nfeat.to(torch.float32)
 
     @property
     def edata(self):
@@ -121,12 +124,19 @@ class CuGraphStorage():
         parents_nodes, children_nodes = self.graphstore.sample_neighbors(
             seed_nodes, fanout, edge_dir='in', prob=None, replace=False)
 
+        num_edges = len(children_nodes)
+        edge_ID_list = torch.zeros(num_edges)
+        for i in range(num_edges):
+            mask1 = self._edge_prop_df['_SRC_'] == int(parents_nodes[i])
+            mask2 = self._edge_prop_df['_DST_'] == int(children_nodes[i])
+            edge_ID_list[i] = torch.tensor(self._edge_prop_df[mask1 & mask2]
+                                           ['_EDGE_ID_'].values_host)
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
         sampled_graph = dgl.graph((children_nodes, parents_nodes))
         # add '_ID'
         num_edges = len(children_nodes)
-        sampled_graph.edata['_ID'] = torch.tensor(np.arange (num_edges))
+        sampled_graph.edata['_ID'] = edge_ID_list
         # to device function move the dgl graph to desired devices
         if output_device is not None:
             sampled_graph.to_device(output_device)

@@ -42,6 +42,8 @@ def read_reddit(raw_path, self_loop=False):
 
     pg.add_vertex_data(cu_features, vertex_col_name="name")
     pg._vertex_prop_dataframe.drop(columns=['name'], inplace=True)
+    pg._vertex_prop_dataframe.drop(columns=['_TYPE_'], inplace=True)
+    pg._vertex_prop_dataframe.drop(columns=['_VERTEX_'], inplace=True)
 
     gstore = CuGraphStorage(pg)
 

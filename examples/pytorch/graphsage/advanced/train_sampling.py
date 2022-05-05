@@ -1,3 +1,4 @@
+import cugraph
 import dgl
 import numpy as np
 import torch as th
@@ -41,6 +42,7 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
     Extracts features and labels for a subset of nodes
     """
     batch_inputs = nfeat[input_nodes].to(device)
+    print("data type of batch inputs", batch_inputs.dtype)
     batch_labels = labels[seeds].to(device)
     return batch_inputs, batch_labels
 

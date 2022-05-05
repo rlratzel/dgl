@@ -179,7 +179,8 @@ if __name__ == '__main__':
         # we only consider transductive cases for now
         train_g = val_g = test_g = gstore
         train_nfeat = val_nfeat = test_nfeat = gstore.ndata
-        train_labels = val_labels = test_labels = labels
+        train_labels = val_labels = test_labels = th.tensor(labels,
+                                                            dtype=th.long)
 
     elif args.dataset == 'reddit':
         raw_path = "../datasets/reddit"
@@ -187,7 +188,8 @@ if __name__ == '__main__':
         n_classes = 41
         train_g = val_g = test_g = gstore
         train_nfeat = val_nfeat = test_nfeat = gstore.ndata
-        train_labels = val_labels = test_labels = labels
+        train_labels = val_labels = test_labels = th.tensor(labels,
+                                                            dtype=th.long)
         # need to add more code from changing mask to id
         idx_train = np.nonzero(train_mask)[0]
         idx_test = np.nonzero(test_mask)[0]
