@@ -14,6 +14,7 @@
 # NOTE: Requires cuGraph nightly cugraph-22.06.00a220417 or later
 
 import random
+import time
 
 import cupy
 import torch
@@ -189,11 +190,12 @@ class GaasGraphStorage:
                 self.__client.extract_subgraph(allow_multi_edges=True,
                                                graph_id=self.__graph_id)
 
+        st=time.time()
         print(f"  calling egonet on {len(seed_nodes)} seed_nodes...", flush=True)
         (srcs, dsts, weights, seeds_offsets) = \
             self.__client.batched_ego_graphs(
                 seed_nodes, radius=1, graph_id=self.__extracted_subgraph_id)
-        print("   back from egonet...", flush=True)
+        print(f"   back from egonet, time was {time.time()-st}...", flush=True)
 
         parents_nodes = []
         children_nodes = []
@@ -214,10 +216,11 @@ class GaasGraphStorage:
             parents_nodes += [dsts[i] for i in filtered_indices]
 
         num_edges = len(children_nodes)
+        st=time.time()
         print("   getting edge IDs...", flush=True)
         edge_ID_list = self.__client.get_edge_IDs_for_vertices(
             parents_nodes, children_nodes, self.__extracted_subgraph_id)
-        print("   done getting edge IDs...", flush=True)
+        print(f"   done getting edge IDs, time was {time.time()-st}...", flush=True)
 
         # construct dgl graph, want to double check if children and parents
         # are in the correct order
