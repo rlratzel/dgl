@@ -15,15 +15,9 @@
 
 import random
 import time
-
-import cupy
 import torch
-import cudf
-import cugraph
-from cugraph.experimental import PropertyGraph
-import dgl
 
-from .cugraph_utils import cugraphToDGL
+import dgl
 
 
 class TorchTensorGaasGraphDataProxy:
@@ -106,11 +100,14 @@ class GaasGraphStorage:
 
     def get_node_storage(self, key, ntype=None):
         raise NotImplementedError
+
         node_col = self.graphstore.get_node_storage(key, ntype)
+        import cupy
         return torch.as_tensor(cupy.asarray(node_col))
 
     def get_edge_storage(self, key, etype=None):
         raise NotImplementedError
+        import cupy
         edge_col = self.graphstore.get_edge_storage(key, etype)
         return torch.as_tensor(cupy.asarray(edge_col))
 
@@ -118,6 +115,7 @@ class GaasGraphStorage:
     @property
     def ntypes(self):
         raise NotImplementedError
+        from cugraph.experimental import PropertyGraph
         data_ntypes = self._ndata[PropertyGraph.type_col_name]
         # TODO: double check the return type
         return data_ntypes
@@ -128,6 +126,7 @@ class GaasGraphStorage:
 
     def etypes(self):
         raise NotImplementedError
+        from cugraph.experimental import PropertyGraph
         data_etypes = self._edata[PropertyGraph.type_col_name]
         return data_etypes
 

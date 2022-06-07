@@ -54,7 +54,9 @@ def dglToCugraph(graph):
     dst = edgelist[1]
     src_array = cupy.asarray(src)
     dst_array = cupy.asarray(dst)
-    cudf_data = cudf.DataFrame((src_array, dst_array))
+    
+    cudf_data = cudf.DataFrame({'source':src_array, 'destination': dst_array})
+
     g_cugraph = cugraph.Graph()
     g_cugraph.from_cudf_edgelist(cudf_data)
     return g_cugraph
