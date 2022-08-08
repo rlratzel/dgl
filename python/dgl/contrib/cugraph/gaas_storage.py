@@ -67,12 +67,12 @@ class TorchTensorGaasGraphDataProxy:
     @property
     def shape(self):
         if self.__category == "edge":
-            return self.__client.get_graph_edge_dataframe_shape(
-                graph_id=self.__graph_id)
+            keys = ["num_edges", "num_edge_properties"]
         else:
-            return self.__client.get_graph_vertex_dataframe_shape(
-                graph_id=self.__graph_id)
+            keys = ["num_vertices_with_properties", "num_vertex_properties"]
 
+        info_dict = self.__client.get_graph_info(keys, graph_id=self.__graph_id)
+        return tuple([info_dict[k] for k in keys])
 
 
 class GaasGraphStorage:
@@ -101,7 +101,7 @@ class GaasGraphStorage:
     @property
     def edata(self):
         return TorchTensorGaasGraphDataProxy(
-            self.__client, self.__graph_id, "vertex")
+            self.__client, self.__graph_id, "edge")
         #return self._edata
 
     def get_node_storage(self, key, ntype=None):
@@ -233,6 +233,7 @@ class GaasGraphStorage:
             sampled_graph.to_device(output_device)
 
         print("returning sampled graph from GaasGraphStorage.sample_neighbors()\n", flush=True)
+        breakpoint()
         return sampled_graph
 
     # Required in Cluster-GCN
