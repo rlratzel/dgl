@@ -1,8 +1,6 @@
 import time
 import argparse
 from pathlib import Path
-
-import cugraph
 import dgl
 import numpy as np
 import torch as th
@@ -12,10 +10,9 @@ import torch.optim as optim
 
 import sys
 sys.path.append('../data_loader')
-from read_cora import read_cora
-from read_reddit import read_reddit
 from model import SAGE
 
+from dgl.contrib.cugraph import GaasGraphStorage
 
 def compute_acc(pred, labels):
     """
@@ -52,12 +49,45 @@ def load_subtensor(nfeat, labels, seeds, input_nodes, device):
 
 
 # Entry point
-def run(args, device, data):
+def run(proc_id, args, devices, data):
+     # Below sets gpu_num
+    dev_id = devices[proc_id]
+
+    import numba.cuda as cuda  # Order is very important, do this first before cuda work
+
+    cuda.select_device(
+        dev_id
+    )  # Create cuda context on the right gpu, defaults to gpu-0
+    import cudf #TODO: Maybe dont need to import
+    import cugraph #TODO: Maybe dont need to import
+    import cupy
+
+    # Start the init_process_group
+    th.cuda.set_device(dev_id)
+    device = th.device(f"cuda:{dev_id}")
+
+    dist_init_method = "tcp://{master_ip}:{master_port}".format(
+        master_ip="127.0.0.1", master_port="12345"
+    )
+    th.distributed.init_process_group(
+        backend="nccl",
+        init_method=dist_init_method,
+        world_size=len(devices),
+        rank=proc_id,
+    )
+
+    
     # Unpack data
     # the reading data part need to be changed
     n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
             val_nfeat, val_labels, test_nfeat, test_labels, idx_train, \
             idx_val, idx_test = data
+    
+    ### Creating a shallow copy here to test if the weight failure will occur
+    train_g = GaasGraphStorage(train_g._GaasGraphStorage__client, train_g._GaasGraphStorage__graph_id)
+
+    
+    print(f"Data Loading Complete at GPU = {dev_id}", flush=True)
 
     in_feats = train_nfeat.shape[1]
     dataloader_device = device
@@ -77,6 +107,7 @@ def run(args, device, data):
         train_nid,
         sampler,
         device=dataloader_device,
+        use_ddp=True,
         batch_size=args.batch_size,
         shuffle=True,
         drop_last=False,
@@ -86,6 +117,12 @@ def run(args, device, data):
     model = SAGE(in_feats, args.num_hidden, n_classes, args.num_layers,
                  F.relu, args.dropout)
     model = model.to(device)
+    
+    ### use DataParallelModel
+    model = th.nn.parallel.DistributedDataParallel(model, device_ids=[device], output_device=device)
+    print(f"Distributed Model loading Complete at GPU = {dev_id}", flush=True)
+    
+
     loss_fcn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
@@ -122,18 +159,19 @@ def run(args, device, data):
                       epoch, step, loss.item(), acc.item(),
                       np.mean(iter_tput[3:])))
             tic_step = time.time()
+            print(f"Step {step} complete at GPU = {dev_id}", flush=True)
 
         toc = time.time()
-        print('Epoch Time(s): {:.4f}'.format(toc - tic))
-        if epoch >= 5:
-            avg += toc - tic
-        if epoch % args.eval_every == 0 and epoch != 0:
-            eval_acc = evaluate(model, val_g, val_nfeat, val_labels,
-                                val_nid, device)
-            print('Eval Acc {:.4f}'.format(eval_acc))
-            test_acc = evaluate(model, test_g, test_nfeat, test_labels,
-                                test_nid, device)
-            print('Test Acc: {:.4f}'.format(test_acc))
+        # print('Epoch Time(s): {:.4f}'.format(toc - tic))
+        # if epoch >= 5:
+        #     avg += toc - tic
+        # if epoch % args.eval_every == 0 and epoch != 0:
+        #     eval_acc = evaluate(model, val_g, val_nfeat, val_labels,
+        #                         val_nid, device)
+        #     print('Eval Acc {:.4f}'.format(eval_acc))
+        #     test_acc = evaluate(model, test_g, test_nfeat, test_labels,
+        #                         test_nid, device)
+        #     print('Test Acc: {:.4f}'.format(test_acc))
 
     print('Avg epoch time: {}'.format(avg / (epoch - 4)))
 
@@ -143,11 +181,11 @@ if __name__ == '__main__':
     argparser.add_argument('--gpu', type=int, default=0,
                            help="GPU device ID. Use -1 for CPU training")
     argparser.add_argument('--dataset', type=str, default='reddit')
-    argparser.add_argument('--num-epochs', type=int, default=20)
-    argparser.add_argument('--num-hidden', type=int, default=16)
+    argparser.add_argument('--num-epochs', type=int, default=1)
+    argparser.add_argument('--num-hidden', type=int, default=2)
     argparser.add_argument('--num-layers', type=int, default=2)
     argparser.add_argument('--fan-out', type=str, default='10,25')
-    argparser.add_argument('--batch-size', type=int, default=1000)
+    argparser.add_argument('--batch-size', type=int, default=2)
     argparser.add_argument('--log-every', type=int, default=20)
     argparser.add_argument('--eval-every', type=int, default=5)
     argparser.add_argument('--lr', type=float, default=0.003)
@@ -174,6 +212,7 @@ if __name__ == '__main__':
         device = th.device('cpu')
 
     if args.dataset == 'cora':
+        from read_cora import read_cora
         graph_path = '../datasets/cora/cora.cites'
         feat_path = '../datasets/cora/cora.content'
         gstore, labels, idx_train, idx_val, idx_test = read_cora(graph_path,
@@ -187,8 +226,8 @@ if __name__ == '__main__':
                                                             dtype=th.long)
 
     elif args.dataset == 'reddit':
-        this_dir = Path(__file__).absolute().parent
-        dataset_path = this_dir.parent / "datasets/reddit"
+        from read_reddit import read_reddit
+        dataset_path = "/datasets/vjawa/graphNN/reddit"
         gstore, labels, train_mask, val_mask, test_mask = \
             read_reddit(dataset_path)
         n_classes = 41
@@ -208,5 +247,9 @@ if __name__ == '__main__':
     data = n_classes, train_g, val_g, test_g, train_nfeat, train_labels, \
            val_nfeat, val_labels, test_nfeat, test_labels, idx_train, \
            idx_val, idx_test
+    
+    
+    devices = [4,5,6]
+    import torch.multiprocessing as mp
 
-    run(args, device, data)
+    mp.spawn(run, args=(args, devices, data), nprocs=len(devices))
